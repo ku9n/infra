@@ -2,6 +2,9 @@ provider "google" {
   project = "infra-259917"
   region = "europe-west1"
 }
+resource "google_compute_address" "static" {
+  name = "ipv4-address"
+}
 resource "google_compute_instance" "app" {
   name         = "reddit-app"
   machine_type = "g1-small"
@@ -17,7 +20,7 @@ resource "google_compute_instance" "app" {
     ssh-keys = "appuser:${file("~/.ssh/appuser.pub")}"
   }
 
-  tags = ["reddit-app"]
+  tags = ["reddit-app"] 
 
   # определение сетевого интерфейса
   network_interface {
@@ -26,12 +29,12 @@ resource "google_compute_instance" "app" {
 
     # использовать ephemeral IP для доступа из Интернет
     access_config {
-   
+      nat_ip = google_compute_address.static.address
     }
   }
 
   connection {
-    host        = "35.189.215.107"
+    host        = "34.76.97.19"
     type        = "ssh"
     user        = "appuser"
     agent       = false
@@ -42,7 +45,6 @@ resource "google_compute_instance" "app" {
     source      = "files/puma.service"
     destination = "/tmp/puma.service"
   }
-
   provisioner "remote-exec" {
     script = "files/deploy.sh"
   }
